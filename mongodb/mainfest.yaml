@@ -41,7 +41,7 @@ spec:
 ---
 
 apiVersion: apps/v1
-kind: Statefulset
+kind: StatefulSet
 metadata:
   name: "mongodb-statefulset"
   namespace: roboshop
