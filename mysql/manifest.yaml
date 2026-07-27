@@ -1,0 +1,80 @@
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "mysql-clusterip"
+  namespace: roboshop
+spec:
+  selector:
+    project: roboshop
+    component: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "mysql-headless"
+  namespace: roboshop
+spec:
+  clusterIP: None
+  selector:
+    project: roboshop
+    component: mysql
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+
+---
+
+apiVersion: storage.k8s.io/v1 
+kind: StorageClass
+metadata:
+  name: "mongodb-storageclass"
+reclaimPolicy: Retain                # Keeps the EBS volume after the PVC is deleted; data is not deleted automatically.
+provisioner: ebs.csi.aws.com         # Uses the AWS EBS CSI driver to create EBS volumes dynamically.
+volumeBindingMode: WaitForFirstConsumer
+
+
+---
+apiVersion: apps/v1
+kind: Statefulset
+metadata:
+  name: "mysql-statefulset"
+  namespace: roboshop
+spec:
+  replicas: 2
+  serviceName: "mysql-headless"
+  selector:
+    project: roboshop
+    component: mysql
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        component: mysql  
+    spec:
+      containers:
+        - name: "mysql-statefulset-c"
+          image:  jansigorle03/mysql:v1
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: "mysql-volume"
+              mountPath: /var/lib/mysql
+      volumeClaimTemplates:
+        - metadata:
+            name: "mysql-volume"
+          spec:
+            accessModes: [ ReadWriteOnce ]  
+            storageClassName: "mysql-storageclass"
+            resources:
+              requests:
+                storage: 2Gi
+
+
