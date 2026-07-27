@@ -15,7 +15,7 @@ spec:
   type: ClusterIP
   selector:   
     author: jansi
-    project: "mondogb-roboshop"
+    project: "mongodb-roboshop"
   ports:
     - protocol: TCP
       port: 27017
@@ -32,7 +32,7 @@ spec:
   clusterIP: None
   selector:   
     author: jansi
-    project: "mondogb-roboshop"
+    project: "mongodb-roboshop"
   ports:
     - protocol: TCP
       port: 27017
@@ -43,7 +43,7 @@ spec:
 apiVersion: apps/v1
 kind: Statefulset
 metadata:
-  name: "mondogb-statefulset"
+  name: "mongodb-statefulset"
   namespace: roboshop
   labels:
     env: dev
@@ -53,14 +53,14 @@ spec:
   selector:
     matchLabels:
       author: jansi
-      project: "mondogb-roboshop"
+      project: "mongodb-roboshop"
   template:
     metadata:
       name: "mongodb-pod"
       namespace: roboshop
       labels:
         author: jansi
-        project: "mondogb-roboshop"            
+        project: "mongodb-roboshop"            
     spec:
       containers:
         - name: "mongodb-container"
