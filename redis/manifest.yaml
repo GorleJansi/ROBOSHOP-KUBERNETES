@@ -1,0 +1,86 @@
+---
+# service for lb btw pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: "redis-clusterip"
+  namespace: roboshop
+spec:
+  selector:
+    project: roboshop
+    component: redis
+  ports:
+    - protocol: TCP
+      port: 5672
+      targetPort: 5672
+---
+#headless service for peer discovery
+apiVersion: v1
+kind: Service
+metadata:
+  name: "redis-headless"
+  namespace: roboshop
+spec:
+  clusterIP: None
+  selector:
+    project: roboshop
+    component: redis
+  ports:
+    - protocol: TCP
+      port: 5672
+      targetPort: 5672
+
+---
+#storageclass dynamically creates disk ebs and pv to refer ebs after pod is created
+apiVersion: storage.k8s.io/v1 
+kind: StorageClass
+metadata:
+  name: "redis-storageclass"
+reclaimPolicy: Retain                # Keeps the EBS volume after the PVC is deleted; data is not deleted automatically.
+provisioner: ebs.csi.aws.com         # Uses the AWS EBS CSI driver to create EBS volumes dynamically.
+volumeBindingMode: WaitForFirstConsumer
+
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: "redis-statefulset"
+  namespace: roboshop
+spec:
+  replicas: 2
+  serviceName: "redis-headless"
+  selector:
+    matchLabels:
+      project: roboshop
+      component: redis
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        component: redis
+    spec:
+      containers:
+        - name: "redis-statefulset-c"
+          image: jansigorle03/redis:v1
+          ports:
+            - containerPort: 3306
+          env:
+            - name: redis_DEFAULT_USER
+              value: roboshop
+            - name: redis_DEFAULT_PASS
+              value: roboshop123
+          volumeMounts:
+            - name: "redis-volume"
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: "redis-volume"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: "redis-storageclass"
+        resources:
+          requests:
+            storage: 2Gi
+
