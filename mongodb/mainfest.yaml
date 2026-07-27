@@ -1,0 +1,82 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "clusterip-service"
+  namespace: roboshop
+spec:
+  type: ClusterIP
+  selector:   
+    author: jansi
+    project: "mondogb-roboshop"
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017  
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: "mongodb-headless"
+  namespace: roboshop
+spec:
+  clusterIP: None
+  selector:   
+    author: jansi
+    project: "mondogb-roboshop"
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017  
+
+---
+
+apiVersion: apps/v1
+kind: Statefulset
+metadata:
+  name: "mondogb-statefulset"
+  namespace: roboshop
+  labels:
+    env: dev
+spec:
+  replicas: 2
+  serviceName: "mongodb-headless"
+  selector:
+    matchLabels:
+      author: jansi
+      project: "mondogb-roboshop"
+  template:
+    metadata:
+      name: "mongodb-pod"
+      namespace: roboshop
+      labels:
+        author: jansi
+        project: "mondogb-roboshop"            
+    spec:
+      containers:
+        - name: "mongodb-container"
+          image:  jansigorle03/mongodb:v1
+          ports:
+            containerPort: 27017
+          resources:
+            requests:
+              cpu: 100m
+              memory: 150Mi
+            limits:
+              cpu: 150m
+              memory: 200Mi    
+          volumeMounts:
+            - name: "mongodb-volume"
+              mountPath: /data/db
+    volumeClaimTemplates:
+      - metadata:
+          name: "mongodb-volume"              
+          namepsace: roboshop
+        spec:
+          accessModes: [ReadWriteOnce]
+          StorageClassName: "monogodb-storageclass"
+          resources:
+            requests:
+              storage:  5Gi        
+
