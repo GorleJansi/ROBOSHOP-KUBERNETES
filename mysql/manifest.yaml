@@ -35,7 +35,7 @@ spec:
 apiVersion: storage.k8s.io/v1 
 kind: StorageClass
 metadata:
-  name: "mongodb-storageclass"
+  name: "mysql-storageclass"
 reclaimPolicy: Retain                # Keeps the EBS volume after the PVC is deleted; data is not deleted automatically.
 provisioner: ebs.csi.aws.com         # Uses the AWS EBS CSI driver to create EBS volumes dynamically.
 volumeBindingMode: WaitForFirstConsumer
@@ -43,7 +43,7 @@ volumeBindingMode: WaitForFirstConsumer
 
 ---
 apiVersion: apps/v1
-kind: Statefulset
+kind: StatefulSet
 metadata:
   name: "mysql-statefulset"
   namespace: roboshop
@@ -51,30 +51,31 @@ spec:
   replicas: 2
   serviceName: "mysql-headless"
   selector:
-    project: roboshop
-    component: mysql
-  template:
-    metadata:
-      labels:
-        project: roboshop
-        component: mysql  
-    spec:
-      containers:
-        - name: "mysql-statefulset-c"
-          image:  jansigorle03/mysql:v1
-          ports:
-            - containerPort: 3306
-          volumeMounts:
-            - name: "mysql-volume"
-              mountPath: /var/lib/mysql
-      volumeClaimTemplates:
-        - metadata:
-            name: "mysql-volume"
-          spec:
-            accessModes: [ ReadWriteOnce ]  
-            storageClassName: "mysql-storageclass"
-            resources:
-              requests:
-                storage: 2Gi
+    matchLabels:
+      project: roboshop
+      component: mysql
+    template:
+      metadata:
+        labels:
+          project: roboshop
+          component: mysql  
+      spec:
+        containers:
+          - name: "mysql-statefulset-c"
+            image:  jansigorle03/mysql:v1
+            ports:
+              - containerPort: 3306
+            volumeMounts:
+              - name: "mysql-volume"
+                mountPath: /var/lib/mysql
+        volumeClaimTemplates:
+          - metadata:
+              name: "mysql-volume"
+            spec:
+              accessModes: [ ReadWriteOnce ]  
+              storageClassName: "mysql-storageclass"
+              resources:
+                requests:
+                  storage: 2Gi
 
 
