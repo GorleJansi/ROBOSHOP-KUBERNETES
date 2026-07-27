@@ -60,32 +60,28 @@ spec:
         author: jansi
         project: "mongodb-roboshop"            
     spec:
-  replicas: 2
-  serviceName: "mysql-headless"
-  selector:
-    matchLabels:
-      project: roboshop
-      component: mysql
-  template:
-    metadata:
-      labels:
-        project: roboshop
-        component: mysql
-    spec:
       containers:
-        - name: "mysql-statefulset-c"
-          image: jansigorle03/mysql:v1
+        - name: "mongodb-container"
+          image: jansigorle03/mongodb:v1
           ports:
-            - containerPort: 3306
+            - containerPort: 27017
+          resources:
+            requests:
+              cpu: 100m
+              memory: 150Mi
+            limits:
+              cpu: 150m
+              memory: 200Mi
           volumeMounts:
-            - name: "mysql-volume"
-              mountPath: /var/lib/mysql
+            - name: "mongodb-volume"
+              mountPath: /data/db
   volumeClaimTemplates:
     - metadata:
-        name: "mysql-volume"
+        name: "mongodb-volume"
       spec:
-        accessModes: [ReadWriteOnce]
-        storageClassName: "mysql-storageclass"
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: "mongodb-storageclass"
         resources:
           requests:
-            storage: 2Gi
+            storage: 5Gi

@@ -54,28 +54,28 @@ spec:
     matchLabels:
       project: roboshop
       component: mysql
-    template:
-      metadata:
-        labels:
-          project: roboshop
-          component: mysql  
+  template:
+    metadata:
+      labels:
+        project: roboshop
+        component: mysql
+    spec:
+      containers:
+        - name: "mysql-statefulset-c"
+          image: jansigorle03/mysql:v1
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: "mysql-volume"
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: "mysql-volume"
       spec:
-        containers:
-          - name: "mysql-statefulset-c"
-            image:  jansigorle03/mysql:v1
-            ports:
-              - containerPort: 3306
-            volumeMounts:
-              - name: "mysql-volume"
-                mountPath: /var/lib/mysql
-        volumeClaimTemplates:
-          - metadata:
-              name: "mysql-volume"
-            spec:
-              accessModes: [ ReadWriteOnce ]  
-              storageClassName: "mysql-storageclass"
-              resources:
-                requests:
-                  storage: 2Gi
-
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: "mysql-storageclass"
+        resources:
+          requests:
+            storage: 2Gi
 
